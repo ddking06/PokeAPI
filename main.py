@@ -25,10 +25,10 @@ def main():
 def create_new_user():
     username = input("Please enter your username: ")
     password = input("Please enter your password: ")
-    created_new_user = database.create_user(username, password)
+    user_id = database.create_user(username, password)
 
-    if created_new_user:
-        logged_in()
+    if user_id is not None:
+        logged_in(user_id)
     else:
         main()
     
@@ -36,7 +36,7 @@ def logged_in(user_id):
     display_main_menu()
     choice = int(input())
 
-    while choice > 3 or choice < 1:
+    while choice > 4 or choice < 1:
         display_main_menu
         choice = int(input())
 
@@ -55,6 +55,10 @@ def logged_in(user_id):
             print(f"{abi}\n")
     
     elif choice == 3:
+        pk_name = input("Please enter the name of the pokemon to add to your favourites: ")
+        add_to_favourites(user_id, pk_name)
+
+    elif choice == 4:
         print("Goobye!")
 
     else:
@@ -63,7 +67,8 @@ def logged_in(user_id):
 def display_main_menu():
     print("1- Search for a pokemon")
     print("2- Search for an ability")
-    print("3- Quit")
+    print("3- Add a pokemon to favourites")
+    print("4- Quit")
 
 def display_login_options():
     print("Please choose one of the following options: ")
@@ -108,6 +113,9 @@ def display_info(data):
             effect = effect.replace("\n", " ")
         print(f"Ability name: {a['ability']['name']} - {effect}\nHidden: {a['is_hidden']}")
         print("")
+
+def add_to_favourites(user_id, pk_name):
+    pass
 
 if __name__ == "__main__":
     main()
