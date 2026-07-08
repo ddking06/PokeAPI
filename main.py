@@ -1,4 +1,5 @@
 import requests
+import database
 
 # PokeAPI's link, removes repetition
 base_url = "https://pokeapi.co/api/v2/"
@@ -6,13 +7,37 @@ base_url = "https://pokeapi.co/api/v2/"
 # Prompts users to login and displays menu
 def main():
     print("---------------WELCOME TO THE POKEDEX---------------")
-    print("Please choose one of the following options: ")
-
-    display_menu()
+    display_login_options()
     choice = int(input())
 
     while choice > 3 or choice < 1:
-        display_menu
+        display_login_options
+        choice = int(input())
+
+    if choice == 1:
+        pass
+    elif choice == 2:
+        create_new_user()
+
+    elif choice == 3:
+        pass
+
+def create_new_user():
+    username = input("Please enter your username: ")
+    password = input("Please enter your password: ")
+    created_new_user = database.create_user(username, password)
+
+    if created_new_user:
+        logged_in()
+    else:
+        main()
+    
+def logged_in():
+    display_main_menu()
+    choice = int(input())
+
+    while choice > 3 or choice < 1:
+        display_main_menu
         choice = int(input())
 
     if choice == 1:
@@ -35,10 +60,16 @@ def main():
     else:
         print("Please enter a valid option")
 
-def display_menu():
+def display_main_menu():
     print("1- Search for a pokemon")
     print("2- Search for an ability")
     print("3- Quit")
+
+def display_login_options():
+    print("Please choose one of the following options: ")
+    print("1- Login")
+    print("2- Register")
+    print("3- Search without logging in")
 
 # Retrieves data by requesting the entered pokemon name and displays a reasonable message if retrieval failed
 # else returns the information as a dictionary

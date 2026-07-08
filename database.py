@@ -51,5 +51,3 @@ def create_user(new_user_name, password):
     cursor.close()
     conn.close()
     return True
-
-create_user()
