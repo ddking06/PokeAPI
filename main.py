@@ -3,12 +3,40 @@ import requests
 base_url = "https://pokeapi.co/api/v2/"
 
 def main():
-    pk_name = input("Enter the name of a Pokémon: ").lower()
+    print("---------------WELCOME TO THE POKEDEX---------------")
+    print("Please choose one of the following options: ")
 
-    pk_dict = get_pokemon_data(pk_name)
+    display_menu()
+    choice = int(input())
 
-    if pk_dict:
-        display_info(pk_dict)
+    while choice > 3 or choice < 1:
+        display_menu
+        choice = int(input())
+
+    if choice == 1:
+        pk_name = input("Enter the name of a Pokémon: ").lower()
+        pk_dict = get_pokemon_data(pk_name)
+
+        if pk_dict:
+            display_info(pk_dict)
+
+    elif choice == 2:
+        pk_ability = input("Enter the name of the ability: ").lower()
+        abi = get_ability_info(pk_ability)
+
+        if abi:
+            print(f"{abi}\n")
+    
+    elif choice == 3:
+        print("Goobye!")
+
+    else:
+        print("Please enter a valid option")
+
+def display_menu():
+    print("1- Search for a pokemon")
+    print("2- Search for an ability")
+    print("3- Quit")
 
 def get_pokemon_data(pokemon_name):
     url = f"{base_url}/pokemon/{pokemon_name}"
