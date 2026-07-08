@@ -4,3 +4,5 @@ This is a small project and a small stepstone for a bigger project i am working 
 ## Skills
 - API
 - Python
+- SQL
+- CustomTkinter
