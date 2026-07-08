@@ -1,27 +1,28 @@
 import sqlite3
 
-conn = sqlite3.connect("pokedex.db")
+def create_tables():
+    conn = sqlite3.connect("pokedex.db")
 
-cursor = conn.cursor()
+    cursor = conn.cursor()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users (
-               id INTEGER PRIMARY KEY AUTOINCREMENT,
-               username TEXT UNIQUE NOT NULL,
-               password TEXT NOT NULL)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL)
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS favourites (
-               id INTEGER PRIMARY KEY AUTOINCREMENT,
-               user_id INTEGER,
-               pokemon_name TEXT,
-               FOREIGN KEY(user_id) REFERENCES users(id)
-               )               
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS favourites (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                pokemon_name TEXT,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+                )               
+    """)
 
-conn.commit()
-conn.close()
+    conn.commit()
+    conn.close()
 
 def get_connection():
     return sqlite3.connect("pokedex.db")
@@ -41,13 +42,16 @@ def create_user(new_user_name, password):
         print(f"Sorry,  {new_user_name} is already taken.")
         cursor.close()
         conn.close()
-        return False # Informs the other function it failed.
+        return None # Informs the other function it failed.
 
     insert_query = "INSERT INTO users(username, password) VALUES (?, ?)"
     cursor.execute(insert_query, (new_user_name, password))
+    user_id = cursor.lastrowid
+    
     conn.commit()
+
     print(f"User {new_user_name} created successfully.")
 
     cursor.close()
     conn.close()
-    return True
+    return user_id

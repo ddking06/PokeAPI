@@ -32,7 +32,7 @@ def create_new_user():
     else:
         main()
     
-def logged_in():
+def logged_in(user_id):
     display_main_menu()
     choice = int(input())
 
