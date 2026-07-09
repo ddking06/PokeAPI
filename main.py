@@ -7,74 +7,102 @@ base_url = "https://pokeapi.co/api/v2/"
 # Prompts users to login and displays menu
 def main():
     print("---------------WELCOME TO THE POKEDEX---------------")
-    display_login_options()
-    choice = int(input())
+    while True:
+        display_login_options()
+        try:
+            choice = int(input())
 
-    while choice > 3 or choice < 1:
-        display_login_options
-        choice = int(input())
+            if not (1 <= choice <=4):
+                print("Please enter a number between 1 and 3.")
+        except ValueError:
+            print("Please enter a valid number")
+            continue
 
-    if choice == 1:
-        pass
-    elif choice == 2:
-        create_new_user()
+        if choice == 1:
+            sign_in()
+        elif choice == 2:
+            create_new_user()
 
-    elif choice == 3:
-        pass
+        elif choice == 3:
+            logged_in()
+        elif choice == 4:
+            print("Goodbye!")
+            break
 
 def create_new_user():
     username = input("Please enter your username: ")
     password = input("Please enter your password: ")
-    user_id = database.create_user(username, password)
+    created_new_user = database.create_user(username, password)
+
+    if created_new_user:
+        logged_in(created_new_user)
+    else:
+        return
+    
+def logged_in(user_id=0):
+    while True:
+        display_main_menu()
+        try:
+            choice = int(input())
+
+            if not(1 <= choice <= 5):
+                print("Please enter a numer between 1 and 3")
+                continue
+        except ValueError:
+            print("Please enter a valid number.")
+
+        if choice == 1:
+            pk_name = input("Enter the name of a Pokémon: ").lower()
+            pk_dict = get_pokemon_data(pk_name)
+
+            if pk_dict:
+                display_info(pk_dict)
+
+        elif choice == 2:
+            pk_ability = input("Enter the name of the ability: ").lower()
+            abi = get_ability_info(pk_ability)
+
+            if abi:
+                print(f"{abi}\n")
+        
+        elif choice == 3:
+            pass
+
+        elif choice == 4:
+            pass
+
+        elif choice == 5:
+            break
+
+        else:
+            print("Please enter a valid option")
+            continue
+    return
+
+def sign_in():
+    username = input("Please enter your username: ")
+    password = input("Please enter your password: ")
+    
+    user_id = database.verify_user(username, password)
 
     if user_id is not None:
         logged_in(user_id)
     else:
-        main()
-    
-def logged_in(user_id):
-    display_main_menu()
-    choice = int(input())
-
-    while choice > 4 or choice < 1:
-        display_main_menu
-        choice = int(input())
-
-    if choice == 1:
-        pk_name = input("Enter the name of a Pokémon: ").lower()
-        pk_dict = get_pokemon_data(pk_name)
-
-        if pk_dict:
-            display_info(pk_dict)
-
-    elif choice == 2:
-        pk_ability = input("Enter the name of the ability: ").lower()
-        abi = get_ability_info(pk_ability)
-
-        if abi:
-            print(f"{abi}\n")
-    
-    elif choice == 3:
-        pk_name = input("Please enter the name of the pokemon to add to your favourites: ")
-        add_to_favourites(user_id, pk_name)
-
-    elif choice == 4:
-        print("Goobye!")
-
-    else:
-        print("Please enter a valid option")
+        print("Invalid username or password")
 
 def display_main_menu():
     print("1- Search for a pokemon")
     print("2- Search for an ability")
     print("3- Add a pokemon to favourites")
-    print("4- Quit")
+    print("4- Look at favourited pokemons")
+    print("5- Logout")
 
 def display_login_options():
     print("Please choose one of the following options: ")
     print("1- Login")
     print("2- Register")
     print("3- Search without logging in")
+    print("4- Quit")
 
 # Retrieves data by requesting the entered pokemon name and displays a reasonable message if retrieval failed
 # else returns the information as a dictionary
@@ -113,9 +141,6 @@ def display_info(data):
             effect = effect.replace("\n", " ")
         print(f"Ability name: {a['ability']['name']} - {effect}\nHidden: {a['is_hidden']}")
         print("")
-
-def add_to_favourites(user_id, pk_name):
-    pass
 
 if __name__ == "__main__":
     main()
