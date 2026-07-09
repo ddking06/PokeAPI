@@ -27,6 +27,23 @@ def create_tables():
 def get_connection():
     return sqlite3.connect("pokedex.db")
 
+def verify_user(username, password):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    check_query = "SELECT id FROM users WHERE username = ? and password = ?"
+    cursor.execute(check_query, (username, password))
+
+    result = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if result is not None:
+        return result[0]
+    else:
+        return None
+
 def create_user(new_user_name, password):
     conn = get_connection()
     cursor = conn.cursor()
