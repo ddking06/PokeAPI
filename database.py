@@ -72,3 +72,25 @@ def create_user(new_user_name, password):
     cursor.close()
     conn.close()
     return user_id
+
+def add_fav_to_db(user_id, fav_pk):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    check_query = "SELECT EXISTS(SELECT 1 FROM favourites WHERE user_id = ? and pokemon_name = ?)"
+    cursor.execute(check_query, (user_id, fav_pk))
+    
+    exists = cursor.fetchone()[0]
+
+    if exists:
+        print(f"{fav_pk} is already on the list of favourites.")
+        return
+
+    insert_query = "INSERT INTO favourites(user_id, pokemon_name) VALUES (?, ?)"
+    cursor.execute(insert_query, (user_id, fav_pk))    
+    print(f"{fav_pk} added to favourites.")
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return

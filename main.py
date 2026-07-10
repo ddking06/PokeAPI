@@ -66,7 +66,7 @@ def logged_in(user_id=0):
                 print(f"{abi}\n")
         
         elif choice == 3:
-            pass
+            add_to_fav(user_id)
 
         elif choice == 4:
             pass
@@ -141,6 +141,24 @@ def display_info(data):
             effect = effect.replace("\n", " ")
         print(f"Ability name: {a['ability']['name']} - {effect}\nHidden: {a['is_hidden']}")
         print("")
+
+def add_to_fav(user_id):
+    if user_id == 0:
+        print("You must be logged in to see this feature.\n")
+        return
+    
+    while True:
+        pk = input("Please enter the name of the pokemon to add to your favourites: ")
+
+        url = f"{base_url}/pokemon/{pk}"
+        response = requests.get(url)
+        
+        if response.status_code == 200:
+            database.add_fav_to_db(user_id, pk)
+            return
+        else:
+            print("Pokemon not found.")
+            continue
 
 if __name__ == "__main__":
     main()
