@@ -1,33 +1,62 @@
 import requests
 import database
+import customtkinter as ctk
+
+app = ctk.CTk()
+app.geometry("2000x1500")
+app.title("Pokedex")
 
 # PokeAPI's link, removes repetition
 base_url = "https://pokeapi.co/api/v2/"
 
 # Prompts users to login and displays menu
-def main():
-    print("---------------WELCOME TO THE POKEDEX---------------")
-    while True:
-        display_login_options()
-        try:
-            choice = int(input())
+def log_in_pressed():
+    sign_in()
 
-            if not (1 <= choice <=4):
-                print("Please enter a number between 1 and 3.")
-        except ValueError:
-            print("Please enter a valid number")
-            continue
+def register_pressed():
+    create_new_user()
 
-        if choice == 1:
-            sign_in()
-        elif choice == 2:
-            create_new_user()
+def guest_pressed():
+    logged_in()
 
-        elif choice == 3:
-            logged_in()
-        elif choice == 4:
-            print("Goodbye!")
-            break
+def quit_program():
+    app.destroy()
+
+title = ctk.CTkLabel(
+    app,
+    text = "POKEDEX",
+    font = ("Arial", 30, "bold")
+    )
+title.pack(pady=20)
+
+login_button = ctk.CTkButton(
+    app, 
+    text = "Login",
+    command = log_in_pressed
+)
+login_button.pack(pady=10)
+
+register_button = ctk.CTkButton(
+    app,
+    text = "Register",
+    command = register_pressed
+)
+register_button.pack(pady=10)
+
+guest_button = ctk.CTkButton(
+    app,
+    text = "Continue as guest",
+    command = guest_pressed
+)
+guest_button.pack(pady=10)
+
+quit_button = ctk.CTkButton(
+    app,
+    text = "Quit",
+    command = quit_program
+)
+quit_button.pack(pady=10)
+
 
 def create_new_user():
     username = input("Please enter your username: ")
@@ -160,5 +189,4 @@ def add_to_fav(user_id):
             print("Pokemon not found.")
             continue
 
-if __name__ == "__main__":
-    main()
+app.mainloop()
