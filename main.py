@@ -5,13 +5,26 @@ import customtkinter as ctk
 app = ctk.CTk()
 app.geometry("2000x1500")
 app.title("Pokedex")
+app.configure(fg_color='red')
 
 # PokeAPI's link, removes repetition
 base_url = "https://pokeapi.co/api/v2/"
 
+# Main menu frame
+main_menu_frame = ctk.CTkFrame(
+    app,
+    fg_color="red"
+)
+
+main_menu_frame.pack(
+    fill = "both",
+    expand = True
+)
+
 # Prompts users to login and displays menu
 def log_in_pressed():
-    sign_in()
+    main_menu_frame.pack_forget()
+    log_in_frame.pack(fill="both", expand = True)
 
 def register_pressed():
     create_new_user()
@@ -23,40 +36,96 @@ def quit_program():
     app.destroy()
 
 title = ctk.CTkLabel(
-    app,
+    main_menu_frame,
     text = "POKEDEX",
     font = ("Arial", 30, "bold")
     )
 title.pack(pady=20)
 
 login_button = ctk.CTkButton(
-    app, 
+    main_menu_frame, 
     text = "Login",
     command = log_in_pressed
 )
 login_button.pack(pady=10)
 
 register_button = ctk.CTkButton(
-    app,
+    main_menu_frame,
     text = "Register",
     command = register_pressed
 )
 register_button.pack(pady=10)
 
 guest_button = ctk.CTkButton(
-    app,
+    main_menu_frame,
     text = "Continue as guest",
     command = guest_pressed
 )
 guest_button.pack(pady=10)
 
 quit_button = ctk.CTkButton(
-    app,
+    main_menu_frame,
     text = "Quit",
     command = quit_program
 )
 quit_button.pack(pady=10)
 
+# Log in Frame
+log_in_frame = ctk.CTkFrame(
+    app,
+    fg_color="red"
+)
+
+login_title = ctk.CTkLabel(
+    log_in_frame,
+    text = "Login",
+    font = ('Arial', 30, 'bold')
+)
+
+login_title.pack(pady=20)
+
+def verify_user():
+    username = username_entry.get()
+    password = password_entry.get()
+    user_id = database.verify_user(username, password)
+
+    if user_id is not None:
+        logged_in(user_id)
+    else:
+        print("Invalid username or password")
+
+def back_to_main():
+    log_in_frame.pack_forget()
+    main_menu_frame.pack(fill="both", expand=True)
+
+username_entry = ctk.CTkEntry(
+    log_in_frame,
+    width = 250,
+    placeholder_text="Username"
+)
+username_entry.pack(pady=5)
+
+password_entry = ctk.CTkEntry(
+    log_in_frame,
+    width = 250,
+    placeholder_text="Password",
+    show = "*"
+)
+password_entry.pack(pady=5)
+
+check_login_button = ctk.CTkButton(
+    log_in_frame,
+    text = "Login",
+    command = verify_user
+)
+check_login_button.pack(pady=10)
+
+back_button = ctk.CTkButton(
+    log_in_frame,
+    text = "Back",
+    command = back_to_main
+)
+back_button.pack(pady=10)
 
 def create_new_user():
     username = input("Please enter your username: ")
@@ -107,17 +176,6 @@ def logged_in(user_id=0):
             print("Please enter a valid option")
             continue
     return
-
-def sign_in():
-    username = input("Please enter your username: ")
-    password = input("Please enter your password: ")
-    
-    user_id = database.verify_user(username, password)
-
-    if user_id is not None:
-        logged_in(user_id)
-    else:
-        print("Invalid username or password")
 
 def display_main_menu():
     print("1- Search for a pokemon")
