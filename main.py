@@ -10,6 +10,8 @@ app.configure(fg_color='red')
 # PokeAPI's link, removes repetition
 base_url = "https://pokeapi.co/api/v2/"
 
+current_user_id = None
+
 # Main menu frame
 main_menu_frame = ctk.CTkFrame(
     app,
@@ -85,14 +87,25 @@ login_title = ctk.CTkLabel(
 login_title.pack(pady=20)
 
 def verify_user():
+    global current_user_id
+
     username = username_entry.get()
     password = password_entry.get()
+    
     user_id = database.verify_user(username, password)
 
     if user_id is not None:
-        logged_in(user_id)
+        current_user_id = user_id
+        log_in_frame.pack_forget()
+        logged_in_frame.pack(fill="both", expand = True)
     else:
-        print("Invalid username or password")
+        incorrect_details_label.pack(pady=30)
+
+incorrect_details_label = ctk.CTkLabel(
+    log_in_frame,
+    text = "Incorrect username or password",
+    font = ('Arial', 20, 'bold')
+)
 
 def back_to_main():
     log_in_frame.pack_forget()
@@ -127,6 +140,72 @@ back_button = ctk.CTkButton(
 )
 back_button.pack(pady=10)
 
+# Logged/Guest in Frame
+logged_in_frame = ctk.CTkFrame(
+    app,
+    fg_color="red"
+)
+
+logged_in_title = ctk.CTkLabel(
+    logged_in_frame,
+    text = "Main menu",
+    font = ('Arial', 30, 'bold')
+)
+logged_in_title.pack(pady=10)
+
+def search_pokemon_button():
+    logged_in_frame.pack_forget()
+    search_pokemon_frame.pack(fill="both", expand = True)
+
+search_pk_button = ctk.CTkButton(
+    logged_in_frame,
+    text = "Search for a pokemon",
+    command = search_pokemon_button
+)
+search_pk_button.pack(pady=20)
+
+search_ability_button = ctk.CTkButton(
+    logged_in_frame,
+    text = "Search for a ability"
+)
+search_ability_button.pack(pady=20)
+
+add_pokemon_to_fav_button = ctk.CTkButton(
+    logged_in_frame,
+    text = "Add a pokemon to favourites"
+)
+add_pokemon_to_fav_button.pack(pady=20)
+
+look_favourite_button = ctk.CTkButton(
+    logged_in_frame,
+    text = "Look at favourited pokemon"
+)
+look_favourite_button.pack(pady=20)
+
+log_out_button = ctk.CTkButton(
+    logged_in_frame,
+    text = "Logout"
+)
+log_out_button.pack(pady=20)
+
+# Search for Pokemon Frame
+search_pokemon_frame = ctk.CTkFrame(
+    app,
+    fg_color="red"
+)
+search_pokemon_title = ctk.CTkLabel(
+    search_pokemon_frame,
+    text = "Pokedex Search",
+    font = ('Arial', 20, 'bold')
+)
+search_pokemon_title.pack(pady=10)
+
+search_bar_entry = ctk.CTkEntry(
+    search_pokemon_frame,
+    width = 250,
+    placeholder_text="Pokemon Name"
+)
+
 def create_new_user():
     username = input("Please enter your username: ")
     password = input("Please enter your password: ")
@@ -139,7 +218,6 @@ def create_new_user():
     
 def logged_in(user_id=0):
     while True:
-        display_main_menu()
         try:
             choice = int(input())
 
@@ -176,20 +254,6 @@ def logged_in(user_id=0):
             print("Please enter a valid option")
             continue
     return
-
-def display_main_menu():
-    print("1- Search for a pokemon")
-    print("2- Search for an ability")
-    print("3- Add a pokemon to favourites")
-    print("4- Look at favourited pokemons")
-    print("5- Logout")
-
-def display_login_options():
-    print("Please choose one of the following options: ")
-    print("1- Login")
-    print("2- Register")
-    print("3- Search without logging in")
-    print("4- Quit")
 
 # Retrieves data by requesting the entered pokemon name and displays a reasonable message if retrieval failed
 # else returns the information as a dictionary
