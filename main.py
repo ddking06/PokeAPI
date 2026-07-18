@@ -13,6 +13,7 @@ base_url = "https://pokeapi.co/api/v2/"
 current_user_id = None
 current_pokemon = None
 current_ability = None
+arial_font = ('Arial', 30, 'bold')
 
 # Main menu frame
 main_menu_frame = ctk.CTkFrame(
@@ -31,10 +32,14 @@ def log_in_pressed():
     log_in_frame.pack(fill="both", expand = True)
 
 def register_pressed():
-    create_new_user()
+    main_menu_frame.pack_forget()
+    register_user_frame.pack(fill="both", expand = True)
 
 def guest_pressed():
-    logged_in()
+    global current_user_id
+    current_user_id = 0
+    main_menu_frame.pack_forget()
+    logged_in_frame.pack(fill="both", expand = True)
 
 def quit_program():
     app.destroy()
@@ -42,7 +47,7 @@ def quit_program():
 title = ctk.CTkLabel(
     main_menu_frame,
     text = "POKEDEX",
-    font = ("Arial", 30, "bold")
+    font = arial_font
     )
 title.pack(pady=20)
 
@@ -83,7 +88,7 @@ log_in_frame = ctk.CTkFrame(
 login_title = ctk.CTkLabel(
     log_in_frame,
     text = "Login",
-    font = ('Arial', 30, 'bold')
+    font = arial_font
 )
 
 login_title.pack(pady=20)
@@ -106,7 +111,7 @@ def verify_user():
 incorrect_details_label = ctk.CTkLabel(
     log_in_frame,
     text = "Incorrect username or password",
-    font = ('Arial', 20, 'bold')
+    font = arial_font
 )
 
 def back_to_main():
@@ -142,6 +147,61 @@ back_button = ctk.CTkButton(
 )
 back_button.pack(pady=10)
 
+#Register Frame
+register_user_frame = ctk.CTkFrame(
+    app,
+    fg_color="red"
+)
+register_user_title = ctk.CTkLabel(
+    register_user_frame,
+    text = "Registe:",
+    font=arial_font
+)
+register_user_title.pack(pady=20)
+
+def register_user():
+    global current_user_id
+
+    new_username = register_username_entry.get()
+    new_password = register_password_entry.get()
+    
+    created_new_user = database.create_user(new_username, new_password)
+
+    if created_new_user:
+        current_user_id = create_new_user
+        register_user_frame.pack_forget()
+        logged_in_frame.pack(fill="both", expand = True)
+    else:
+        username_already_exists.pack(pady=20)
+
+register_username_entry = ctk.CTkEntry(
+    register_user_frame,
+    width = 250,
+    placeholder_text="Username"
+)
+register_username_entry.pack(pady=5)
+
+register_password_entry = ctk.CTkEntry(
+    register_user_frame,
+    width = 250,
+    placeholder_text="Password",
+    show = "*"
+)
+register_password_entry.pack(pady=5)
+
+register_button = ctk.CTkButton(
+    register_user_frame,
+    text = "Register!",
+    command = register_user
+)
+register_button.pack(pady=20)
+
+username_already_exists = ctk.CTkLabel(
+    register_user_frame,
+    text = "Sorry, username provided already exists.",
+    font = arial_font
+)
+
 # Logged/Guest in Frame
 logged_in_frame = ctk.CTkFrame(
     app,
@@ -151,13 +211,19 @@ logged_in_frame = ctk.CTkFrame(
 logged_in_title = ctk.CTkLabel(
     logged_in_frame,
     text = "Main menu",
-    font = ('Arial', 30, 'bold')
+    font = arial_font
 )
 logged_in_title.pack(pady=10)
 
 def search_pokemon_button():
     logged_in_frame.pack_forget()
     search_pokemon_frame.pack(fill="both", expand = True)
+
+def log_out_button():
+    global current_user_id
+    current_user_id = None
+    logged_in_frame.pack_forget()
+    main_menu_frame.pack(fill = "both", expand = True)
 
 search_pk_button = ctk.CTkButton(
     logged_in_frame,
@@ -186,7 +252,8 @@ look_favourite_button.pack(pady=20)
 
 log_out_button = ctk.CTkButton(
     logged_in_frame,
-    text = "Logout"
+    text = "Logout",
+    command = log_out_button
 )
 log_out_button.pack(pady=20)
 
@@ -198,7 +265,7 @@ search_pokemon_frame = ctk.CTkFrame(
 search_pokemon_title = ctk.CTkLabel(
     search_pokemon_frame,
     text = "Pokedex Search",
-    font = ('Arial', 20, 'bold')
+    font = arial_font
 )
 search_pokemon_title.pack(pady=10)
 
@@ -211,7 +278,15 @@ def check_pk_exists():
         current_pokemon = pk_dict
         search_pokemon_frame.pack_forget()
         display_pk_info_frame.pack(fill="both", expand = True)
+    else:
+        error_searching_label.pack(pady=20)
 
+
+error_searching_label = ctk.CTkLabel(
+    search_pokemon_frame,
+    text = "Sorry, details entered don't match anything on the system. Please check your spelling.",
+    font = arial_font
+)
 search_bar_entry = ctk.CTkEntry(
     search_pokemon_frame,
     width = 250,
@@ -221,7 +296,8 @@ search_bar_entry.pack(pady=20)
 
 search_button = ctk.CTkButton(
     search_pokemon_frame,
-    text = "Search!"
+    text = "Search!",
+    command = check_pk_exists
 )
 search_button.pack(pady=20)
 
