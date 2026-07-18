@@ -3,7 +3,7 @@ import database
 import customtkinter as ctk
 
 app = ctk.CTk()
-app.geometry("2000x1500")
+app.geometry("500x300")
 app.title("Pokedex")
 app.configure(fg_color='red')
 
@@ -11,6 +11,8 @@ app.configure(fg_color='red')
 base_url = "https://pokeapi.co/api/v2/"
 
 current_user_id = None
+current_pokemon = None
+current_ability = None
 
 # Main menu frame
 main_menu_frame = ctk.CTkFrame(
@@ -200,10 +202,33 @@ search_pokemon_title = ctk.CTkLabel(
 )
 search_pokemon_title.pack(pady=10)
 
+def check_pk_exists():
+    global current_pokemon
+    pokemon_name = search_bar_entry.get()
+    pk_dict = get_pokemon_data(pokemon_name)
+
+    if pk_dict:
+        current_pokemon = pk_dict
+        search_pokemon_frame.pack_forget()
+        display_pk_info_frame.pack(fill="both", expand = True)
+
 search_bar_entry = ctk.CTkEntry(
     search_pokemon_frame,
     width = 250,
     placeholder_text="Pokemon Name"
+)
+search_bar_entry.pack(pady=20)
+
+search_button = ctk.CTkButton(
+    search_pokemon_frame,
+    text = "Search!"
+)
+search_button.pack(pady=20)
+
+#Display pokemon info frame
+display_pk_info_frame = ctk.CTkFrame(
+    app,
+    fg_color="red"
 )
 
 def create_new_user():
