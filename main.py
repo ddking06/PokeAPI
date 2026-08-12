@@ -168,7 +168,7 @@ def register_user():
     created_new_user = database.create_user(new_username, new_password)
 
     if created_new_user:
-        current_user_id = create_new_user
+        current_user_id = created_new_user
         register_user_frame.pack_forget()
         logged_in_frame.pack(fill="both", expand = True)
     else:
@@ -271,13 +271,43 @@ search_pokemon_title.pack(pady=10)
 
 def check_pk_exists():
     global current_pokemon
+
     pokemon_name = search_bar_entry.get()
     pk_dict = get_pokemon_data(pokemon_name)
 
     if pk_dict:
         current_pokemon = pk_dict
+
+        display_pk_info_title.configure(
+            text = pk_dict["name"].title()
+        )
+
+        height_label.configure(
+            text = f"Height: {pk_dict['height'] / 10} m"
+        )
+
+        weight_label.configure(
+            text = f"Weight: {pk_dict['weight'] / 10} kg"
+        )
+
+        types = [t["type"]["name"].title() for t in pk_dict["types"]]
+
+        types_label.configure(
+            text = f"Types: {', '.join(types)}"
+        )
+
+        abilities = [
+            a["ability"]["name"].title()
+            for a in pk_dict["abilities"]
+        ]
+
+        abilities_label.configure(
+            text = f"Abilities: {', '.join(abilities)}"
+        )
+
         search_pokemon_frame.pack_forget()
         display_pk_info_frame.pack(fill="both", expand = True)
+
     else:
         error_searching_label.pack(pady=20)
 
@@ -306,17 +336,38 @@ display_pk_info_frame = ctk.CTkFrame(
     app,
     fg_color="red"
 )
+display_pk_info_title = ctk.CTkLabel(
+    display_pk_info_frame,
+    text="",
+    font=arial_font
+)
+display_pk_info_title.pack(pady=20)
 
-def create_new_user():
-    username = input("Please enter your username: ")
-    password = input("Please enter your password: ")
-    created_new_user = database.create_user(username, password)
+height_label = ctk.CTkLabel(
+    display_pk_info_frame,
+    text=""
+)
+height_label.pack(pady=5)
 
-    if created_new_user:
-        logged_in(created_new_user)
-    else:
-        return
-    
+weight_label = ctk.CTkLabel(
+    display_pk_info_frame,
+    text=""
+)
+weight_label.pack(pady=5)
+
+types_label = ctk.CTkLabel(
+    display_pk_info_frame,
+    text=""
+)
+types_label.pack(pady=5)
+
+abilities_label = ctk.CTkLabel(
+    display_pk_info_frame,
+    text="",
+    wraplength=400
+)
+abilities_label.pack(pady=5)
+
 def logged_in(user_id=0):
     while True:
         try:
