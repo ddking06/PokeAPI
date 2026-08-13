@@ -1,9 +1,11 @@
 import requests
 import database
 import customtkinter as ctk
+from PIL import Image
+from io import BytesIO
 
 app = ctk.CTk()
-app.geometry("500x300")
+app.geometry("1200x800")
 app.title("Pokedex")
 app.configure(fg_color='red')
 
@@ -114,10 +116,6 @@ incorrect_details_label = ctk.CTkLabel(
     font = arial_font
 )
 
-def back_to_main():
-    log_in_frame.pack_forget()
-    main_menu_frame.pack(fill="both", expand=True)
-
 username_entry = ctk.CTkEntry(
     log_in_frame,
     width = 250,
@@ -140,13 +138,6 @@ check_login_button = ctk.CTkButton(
 )
 check_login_button.pack(pady=10)
 
-back_button = ctk.CTkButton(
-    log_in_frame,
-    text = "Back",
-    command = back_to_main
-)
-back_button.pack(pady=10)
-
 #Register Frame
 register_user_frame = ctk.CTkFrame(
     app,
@@ -154,7 +145,7 @@ register_user_frame = ctk.CTkFrame(
 )
 register_user_title = ctk.CTkLabel(
     register_user_frame,
-    text = "Registe:",
+    text = "Register:",
     font=arial_font
 )
 register_user_title.pack(pady=20)
@@ -250,12 +241,12 @@ look_favourite_button = ctk.CTkButton(
 )
 look_favourite_button.pack(pady=20)
 
-log_out_button = ctk.CTkButton(
+log_out_btn = ctk.CTkButton(
     logged_in_frame,
     text = "Logout",
     command = log_out_button
 )
-log_out_button.pack(pady=20)
+log_out_btn.pack(pady=20)
 
 # Search for Pokemon Frame
 search_pokemon_frame = ctk.CTkFrame(
@@ -268,6 +259,17 @@ search_pokemon_title = ctk.CTkLabel(
     font = arial_font
 )
 search_pokemon_title.pack(pady=10)
+
+def go_to_frame(current_frame, target_frame):
+    current_frame.pack_forget()
+    target_frame.pack(fill="both", expand = True)
+
+def create_back_button(parent, current_frame, target_frame):
+    return ctk.CTkButton(
+        parent,
+        text = "Back",
+        command = lambda: go_to_frame(current_frame, target_frame)
+    )
 
 def check_pk_exists():
     global current_pokemon
@@ -304,6 +306,25 @@ def check_pk_exists():
         abilities_label.configure(
             text = f"Abilities: {', '.join(abilities)}"
         )
+
+        sprite_url = pk_dict["sprites"]["other"]["official-artwork"]["front_default"]
+
+        response = requests.get(sprite_url)
+
+        pil_image = Image.open(BytesIO(response.content))
+
+        ctk_image = ctk.CTkImage(
+            light_image=pil_image,
+            dark_image=pil_image,
+            size = (300, 300)
+        )
+
+        sprite_label.configure(
+            image = ctk_image,
+            text = ""
+        )
+
+        sprite_label._image = ctk_image
 
         search_pokemon_frame.pack_forget()
         display_pk_info_frame.pack(fill="both", expand = True)
@@ -343,30 +364,78 @@ display_pk_info_title = ctk.CTkLabel(
 )
 display_pk_info_title.pack(pady=20)
 
-height_label = ctk.CTkLabel(
+info_frame = ctk.CTkFrame(
     display_pk_info_frame,
+    fg_color="red"
+    )
+info_frame.pack(side="left", padx=50, pady=20)
+
+image_frame = ctk.CTkFrame(
+    display_pk_info_frame,
+    fg_color="red"
+    )
+
+image_frame.pack(side="right", padx=50, pady=20)
+
+height_label = ctk.CTkLabel(
+    info_frame,
     text=""
 )
 height_label.pack(pady=5)
 
 weight_label = ctk.CTkLabel(
-    display_pk_info_frame,
+    info_frame,
     text=""
 )
 weight_label.pack(pady=5)
 
 types_label = ctk.CTkLabel(
-    display_pk_info_frame,
+    info_frame,
     text=""
 )
 types_label.pack(pady=5)
 
 abilities_label = ctk.CTkLabel(
-    display_pk_info_frame,
+    info_frame,
     text="",
     wraplength=400
 )
 abilities_label.pack(pady=5)
+
+sprite_label = ctk.CTkLabel(
+    image_frame,
+    text= ""
+)
+sprite_label.pack(padx=10)
+
+# Defining all back buttons
+login_back_button = create_back_button(
+    log_in_frame,
+    log_in_frame,
+    main_menu_frame
+)
+login_back_button.pack(pady=10)
+
+register_back_button = create_back_button(
+    register_user_frame,
+    register_user_frame,
+    main_menu_frame
+)
+register_back_button.pack(pady=10)
+
+search_back_button = create_back_button(
+    search_pokemon_frame,
+    search_pokemon_frame,
+    logged_in_frame
+)
+search_back_button.pack(pady=10)
+
+pk_info_back = create_back_button(
+    display_pk_info_frame,
+    display_pk_info_frame,
+    search_pokemon_frame
+)
+pk_info_back.pack(pady=10)
 
 def logged_in(user_id=0):
     while True:
