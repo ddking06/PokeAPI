@@ -210,6 +210,10 @@ def search_pokemon_button():
     logged_in_frame.pack_forget()
     search_pokemon_frame.pack(fill="both", expand = True)
 
+def search_ability_button():
+    logged_in_frame.forget()
+    search_ability_frame.pack(fill="both", expand = True)
+
 def log_out_button():
     global current_user_id
     current_user_id = None
@@ -223,11 +227,12 @@ search_pk_button = ctk.CTkButton(
 )
 search_pk_button.pack(pady=20)
 
-search_ability_button = ctk.CTkButton(
+search_ability_btn = ctk.CTkButton(
     logged_in_frame,
-    text = "Search for a ability"
+    text = "Search for a ability",
+    command = search_ability_button
 )
-search_ability_button.pack(pady=20)
+search_ability_btn.pack(pady=20)
 
 add_pokemon_to_fav_button = ctk.CTkButton(
     logged_in_frame,
@@ -307,6 +312,14 @@ def check_pk_exists():
             text = f"Abilities: {', '.join(abilities)}"
         )
 
+        description = get_pokemon_description(
+            pk_dict["name"]
+        )
+
+        description_label.configure(
+            text=description
+        )
+
         sprite_url = pk_dict["sprites"]["other"]["official-artwork"]["front_default"]
 
         response = requests.get(sprite_url)
@@ -324,7 +337,7 @@ def check_pk_exists():
             text = ""
         )
 
-        sprite_label._image = ctk_image
+        sprite_label.image = ctk_image
 
         search_pokemon_frame.pack_forget()
         display_pk_info_frame.pack(fill="both", expand = True)
@@ -375,7 +388,13 @@ image_frame = ctk.CTkFrame(
     fg_color="red"
     )
 
-image_frame.pack(side="right", padx=50, pady=20)
+image_frame.pack(side="left", padx=50, pady=20)
+
+button_frame = ctk.CTkFrame(
+    display_pk_info_frame,
+    fg_color="red"
+)
+button_frame.pack(side="bottom", pady=10)
 
 height_label = ctk.CTkLabel(
     info_frame,
@@ -408,6 +427,94 @@ sprite_label = ctk.CTkLabel(
 )
 sprite_label.pack(padx=10)
 
+description_frame = ctk.CTkFrame(
+    display_pk_info_frame,
+    fg_color="red"
+)
+
+description_frame.pack(
+    side="left",
+    pady=20
+)
+
+description_frame_title = ctk.CTkLabel(
+    description_frame,
+    text = "Description:",
+    font = arial_font
+)
+description_frame_title.pack(pady=20)
+
+description_label = ctk.CTkLabel(
+    description_frame,
+    text = "",
+    wraplength=350,
+    justify = "left"
+)
+description_label.pack(pady=20)
+
+def check_ab_exists():
+    global current_ability
+
+    ability = search_ab_bar_entry.get()
+    ab_dict = get_ability_info(ability)
+
+    if ab_dict:
+        current_ability = ab_dict
+        ability_frame_title.configure(
+            text=ability.title()
+        )
+        ability_information.configure(
+            text = ab_dict
+        )
+
+        search_ability_frame.forget()
+        ability_frame.pack(fill = "both", expand = True)
+
+
+# Search for ability frame
+search_ability_frame = ctk.CTkFrame(
+    app,
+    fg_color="red"
+)
+search_ability_title = ctk.CTkLabel(
+    search_ability_frame,
+    text = "Ability Search",
+    font = arial_font
+)
+search_ability_title.pack(pady=10)
+
+search_ab_bar_entry = ctk.CTkEntry(
+    search_ability_frame,
+    width = 250,
+    placeholder_text="Ability Name"
+)
+search_ab_bar_entry.pack(pady=20)
+
+search_ab_button = ctk.CTkButton(
+    search_ability_frame,
+    text = "Search!",
+    command = check_ab_exists
+)
+search_ab_button.pack(pady=20)
+
+# Display pokemon ability frame
+ability_frame = ctk.CTkFrame(
+    app,
+    fg_color="red"
+)
+ability_frame_title = ctk.CTkLabel(
+    ability_frame,
+    text=""
+)
+ability_frame_title.pack(pady=10)
+
+ability_information = ctk.CTkLabel(
+    ability_frame,
+    text = "",
+    wraplength=700
+)
+ability_information.pack(pady=10)
+
 # Defining all back buttons
 login_back_button = create_back_button(
     log_in_frame,
@@ -423,58 +530,33 @@ register_back_button = create_back_button(
 )
 register_back_button.pack(pady=10)
 
-search_back_button = create_back_button(
+search_pk_back_button = create_back_button(
     search_pokemon_frame,
     search_pokemon_frame,
     logged_in_frame
 )
-search_back_button.pack(pady=10)
+search_pk_back_button.pack(pady=10)
 
 pk_info_back = create_back_button(
-    display_pk_info_frame,
+    button_frame,
     display_pk_info_frame,
     search_pokemon_frame
 )
 pk_info_back.pack(pady=10)
 
-def logged_in(user_id=0):
-    while True:
-        try:
-            choice = int(input())
+search_ab_back_button = create_back_button(
+    search_ability_frame,
+    search_ability_frame,
+    logged_in_frame
+)
+search_ab_back_button.pack(pady=10)
 
-            if not(1 <= choice <= 5):
-                print("Please enter a numer between 1 and 3")
-                continue
-        except ValueError:
-            print("Please enter a valid number.")
-
-        if choice == 1:
-            pk_name = input("Enter the name of a Pokémon: ").lower()
-            pk_dict = get_pokemon_data(pk_name)
-
-            if pk_dict:
-                display_info(pk_dict)
-
-        elif choice == 2:
-            pk_ability = input("Enter the name of the ability: ").lower()
-            abi = get_ability_info(pk_ability)
-
-            if abi:
-                print(f"{abi}\n")
-        
-        elif choice == 3:
-            add_to_fav(user_id)
-
-        elif choice == 4:
-            pass
-
-        elif choice == 5:
-            break
-
-        else:
-            print("Please enter a valid option")
-            continue
-    return
+ability_back_button = create_back_button(
+    ability_frame,
+    ability_frame,
+    search_ability_frame
+)
+ability_back_button.pack(pady=10)
 
 # Retrieves data by requesting the entered pokemon name and displays a reasonable message if retrieval failed
 # else returns the information as a dictionary
@@ -489,6 +571,21 @@ def get_pokemon_data(pokemon_name):
     else:
         print(f"Failed to retrieve data {response.status_code}")
 
+# Retrieves pokemon species description
+def get_pokemon_description(pokemon_name):
+    url = f"{base_url}/pokemon-species/{pokemon_name}"
+
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        species_data = response.json()
+
+        for entry in species_data["flavor_text_entries"]:
+            if entry["language"]["name"] == "en":
+                return entry["flavor_text"].replace("\n", " ").replace("\f", " ")
+
+    return "No description available."
+
 # Retrieves ability information from user input, only returns the ability in english
 def get_ability_info(ability_name):
     url = f"{base_url}/ability/{ability_name}"
@@ -500,19 +597,6 @@ def get_ability_info(ability_name):
                 return a["effect"]
     else: 
         print(f"Failed to retrieve ability. {response.status_code}")
-
-# Uses get_pokemon_data() and uses the dictionary returned to filter and display relevant information.
-def display_info(data):
-    print(f"Name: {data['name']}\n")
-    print(f"Id: {data['id']}\n")
-    print(f"Height: {data['height']/10}m\n")
-    print(f"Weight: {data['weight']/10}kg\n")
-    for a in data["abilities"]:
-        effect = get_ability_info(a['ability']['name'])
-        if effect:
-            effect = effect.replace("\n", " ")
-        print(f"Ability name: {a['ability']['name']} - {effect}\nHidden: {a['is_hidden']}")
-        print("")
 
 def add_to_fav(user_id):
     if user_id == 0:
