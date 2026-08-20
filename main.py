@@ -234,12 +234,6 @@ search_ability_btn = ctk.CTkButton(
 )
 search_ability_btn.pack(pady=20)
 
-add_pokemon_to_fav_button = ctk.CTkButton(
-    logged_in_frame,
-    text = "Add a pokemon to favourites"
-)
-add_pokemon_to_fav_button.pack(pady=20)
-
 look_favourite_button = ctk.CTkButton(
     logged_in_frame,
     text = "Look at favourited pokemon"
@@ -283,6 +277,8 @@ def check_pk_exists():
     pk_dict = get_pokemon_data(pokemon_name)
 
     if pk_dict:
+        search_bar_entry.delete(0, "end")
+        
         current_pokemon = pk_dict
 
         display_pk_info_title.configure(
@@ -338,6 +334,13 @@ def check_pk_exists():
         )
 
         sprite_label.image = ctk_image
+
+        add_favourite_button = ctk.CTkButton(
+            button_frame,
+            text="Favourite!",
+            command=add_to_fav
+        )
+        add_favourite_button.pack(side="left", pady=5, padx=10)
 
         search_pokemon_frame.pack_forget()
         display_pk_info_frame.pack(fill="both", expand = True)
@@ -452,6 +455,13 @@ description_label = ctk.CTkLabel(
 )
 description_label.pack(pady=20)
 
+favourite_status_label = ctk.CTkLabel(
+    button_frame,
+    text=""
+)
+favourite_status_label.pack(pady=5)
+
+# Search for ability frame
 def check_ab_exists():
     global current_ability
 
@@ -470,8 +480,6 @@ def check_ab_exists():
         search_ability_frame.forget()
         ability_frame.pack(fill = "both", expand = True)
 
-
-# Search for ability frame
 search_ability_frame = ctk.CTkFrame(
     app,
     fg_color="red"
@@ -515,6 +523,80 @@ ability_information = ctk.CTkLabel(
 )
 ability_information.pack(pady=10)
 
+# Look at favourites frame
+def open_favourite_pokemon(pokemon_name):
+    search_bar_entry.delete(0, "end")
+    search_bar_entry.insert(0, pokemon_name)
+
+    favourites_frame.pack_forget()
+    check_pk_exists()
+
+def load_favourites():
+    if current_user_id in (None, 0):
+        return
+
+    for widget in scrollable_favourites.winfo_children():
+        widget.destroy()
+
+    favourites = database.get_user_favourites(
+        current_user_id
+    )
+    for favourite in favourites:
+
+        pokemon_name = favourite[0]
+
+        pokemon_button = ctk.CTkButton(
+            scrollable_favourites,
+            text=pokemon_name.title(),
+            command=lambda name=pokemon_name:
+                open_favourite_pokemon(name)
+        )
+        pokemon_button.pack(
+            fill="x",
+            padx=10,
+            pady=5
+        )
+
+def show_favourites():
+    if current_user_id in (None, 0):
+
+        favourite_status_label.configure(
+            text="You must be logged in."
+        )
+
+        return
+
+    load_favourites()
+    logged_in_frame.pack_forget()
+
+    favourites_frame.pack(
+        fill="both",
+        expand=True
+    )
+
+look_favourite_button.configure(
+    command = show_favourites
+)
+favourites_frame = ctk.CTkFrame(
+    app,
+    fg_color="red"
+)
+favourites_title = ctk.CTkLabel(
+    favourites_frame,
+    text="Favourite Pokemon",
+    font=arial_font
+)
+
+favourites_title.pack(pady=10)
+
+scrollable_favourites = ctk.CTkScrollableFrame(
+    favourites_frame, width=400, height=400
+)
+
+scrollable_favourites.pack(
+    fill="both", expand=True, padx=20, pady=20
+)
+
 # Defining all back buttons
 login_back_button = create_back_button(
     log_in_frame,
@@ -542,7 +624,7 @@ pk_info_back = create_back_button(
     display_pk_info_frame,
     search_pokemon_frame
 )
-pk_info_back.pack(pady=10)
+pk_info_back.pack(side="right", pady=10)
 
 search_ab_back_button = create_back_button(
     search_ability_frame,
@@ -598,22 +680,26 @@ def get_ability_info(ability_name):
     else: 
         print(f"Failed to retrieve ability. {response.status_code}")
 
-def add_to_fav(user_id):
-    if user_id == 0:
-        print("You must be logged in to see this feature.\n")
-        return
-    
-    while True:
-        pk = input("Please enter the name of the pokemon to add to your favourites: ")
+def add_to_fav():
+    global current_pokemon
 
-        url = f"{base_url}/pokemon/{pk}"
-        response = requests.get(url)
-        
-        if response.status_code == 200:
-            database.add_fav_to_db(user_id, pk)
-            return
-        else:
-            print("Pokemon not found.")
-            continue
+    if current_user_id == 0:
+        favourite_status_label.configure(
+            text="Must be logged in first."
+        )
+        return
+
+    pk_name = current_pokemon["name"]
+
+    success = database.add_fav_to_db(current_user_id, pk_name)
+
+    if success:
+        favourite_status_label.configure(
+            text="Added to favourites!"
+        )
+    else:
+        favourite_status_label.configure(
+            text="Already in favourites."
+        )
 
 app.mainloop()
