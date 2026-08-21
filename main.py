@@ -1,9 +1,11 @@
 import requests
 import database
 import customtkinter as ctk
+from PIL import Image
+from io import BytesIO
 
 app = ctk.CTk()
-app.geometry("500x300")
+app.geometry("1200x800")
 app.title("Pokedex")
 app.configure(fg_color='red')
 
@@ -38,6 +40,7 @@ def register_pressed():
 def guest_pressed():
     global current_user_id
     current_user_id = 0
+    logged_in_status_label.configure(text="")
     main_menu_frame.pack_forget()
     logged_in_frame.pack(fill="both", expand = True)
 
@@ -105,18 +108,16 @@ def verify_user():
         current_user_id = user_id
         log_in_frame.pack_forget()
         logged_in_frame.pack(fill="both", expand = True)
+        username_entry.delete(0, "end")
+        password_entry.delete(0, "end")
+        incorrect_details_label.configure(
+            text = ""
+        )
+        logged_in_status_label.configure(text="")
     else:
-        incorrect_details_label.pack(pady=30)
-
-incorrect_details_label = ctk.CTkLabel(
-    log_in_frame,
-    text = "Incorrect username or password",
-    font = arial_font
-)
-
-def back_to_main():
-    log_in_frame.pack_forget()
-    main_menu_frame.pack(fill="both", expand=True)
+        incorrect_details_label.configure(
+            text = "Incorrect username or password"
+        )
 
 username_entry = ctk.CTkEntry(
     log_in_frame,
@@ -140,12 +141,12 @@ check_login_button = ctk.CTkButton(
 )
 check_login_button.pack(pady=10)
 
-back_button = ctk.CTkButton(
+incorrect_details_label = ctk.CTkLabel(
     log_in_frame,
-    text = "Back",
-    command = back_to_main
+    text = "",
+    font = arial_font
 )
-back_button.pack(pady=10)
+incorrect_details_label.pack(pady=20)
 
 #Register Frame
 register_user_frame = ctk.CTkFrame(
@@ -154,7 +155,7 @@ register_user_frame = ctk.CTkFrame(
 )
 register_user_title = ctk.CTkLabel(
     register_user_frame,
-    text = "Registe:",
+    text = "Register:",
     font=arial_font
 )
 register_user_title.pack(pady=20)
@@ -168,11 +169,19 @@ def register_user():
     created_new_user = database.create_user(new_username, new_password)
 
     if created_new_user:
-        current_user_id = create_new_user
+        current_user_id = created_new_user
         register_user_frame.pack_forget()
         logged_in_frame.pack(fill="both", expand = True)
+        register_username_entry.delete(0, "end")
+        register_password_entry.delete(0, "end")
+        username_already_exists.configure(
+            text = ""
+        )
+        logged_in_status_label.configure(text="")
     else:
-        username_already_exists.pack(pady=20)
+        username_already_exists.configure(
+            text = "Sorry, username provided already exists."
+        )
 
 register_username_entry = ctk.CTkEntry(
     register_user_frame,
@@ -198,9 +207,10 @@ register_button.pack(pady=20)
 
 username_already_exists = ctk.CTkLabel(
     register_user_frame,
-    text = "Sorry, username provided already exists.",
+    text = "",
     font = arial_font
 )
+username_already_exists.pack(pady=20)
 
 # Logged/Guest in Frame
 logged_in_frame = ctk.CTkFrame(
@@ -219,6 +229,10 @@ def search_pokemon_button():
     logged_in_frame.pack_forget()
     search_pokemon_frame.pack(fill="both", expand = True)
 
+def search_ability_button():
+    logged_in_frame.forget()
+    search_ability_frame.pack(fill="both", expand = True)
+
 def log_out_button():
     global current_user_id
     current_user_id = None
@@ -232,17 +246,12 @@ search_pk_button = ctk.CTkButton(
 )
 search_pk_button.pack(pady=20)
 
-search_ability_button = ctk.CTkButton(
+search_ability_btn = ctk.CTkButton(
     logged_in_frame,
-    text = "Search for a ability"
+    text = "Search for a ability",
+    command = search_ability_button
 )
-search_ability_button.pack(pady=20)
-
-add_pokemon_to_fav_button = ctk.CTkButton(
-    logged_in_frame,
-    text = "Add a pokemon to favourites"
-)
-add_pokemon_to_fav_button.pack(pady=20)
+search_ability_btn.pack(pady=20)
 
 look_favourite_button = ctk.CTkButton(
     logged_in_frame,
@@ -250,12 +259,12 @@ look_favourite_button = ctk.CTkButton(
 )
 look_favourite_button.pack(pady=20)
 
-log_out_button = ctk.CTkButton(
+log_out_btn = ctk.CTkButton(
     logged_in_frame,
     text = "Logout",
     command = log_out_button
 )
-log_out_button.pack(pady=20)
+log_out_btn.pack(pady=20)
 
 # Search for Pokemon Frame
 search_pokemon_frame = ctk.CTkFrame(
@@ -269,18 +278,90 @@ search_pokemon_title = ctk.CTkLabel(
 )
 search_pokemon_title.pack(pady=10)
 
+def go_to_frame(current_frame, target_frame):
+    current_frame.pack_forget()
+    target_frame.pack(fill="both", expand = True)
+
+def create_back_button(parent, current_frame, target_frame):
+    return ctk.CTkButton(
+        parent,
+        text = "Back",
+        command = lambda: go_to_frame(current_frame, target_frame)
+    )
+
 def check_pk_exists():
     global current_pokemon
+
     pokemon_name = search_bar_entry.get()
     pk_dict = get_pokemon_data(pokemon_name)
+    favourite_status_label.configure(
+        text = ""
+    )
 
     if pk_dict:
+        search_bar_entry.delete(0, "end")
+        
         current_pokemon = pk_dict
+
+        display_pk_info_title.configure(
+            text = pk_dict["name"].title()
+        )
+
+        height_label.configure(
+            text = f"Height: {pk_dict['height'] / 10} m"
+        )
+
+        weight_label.configure(
+            text = f"Weight: {pk_dict['weight'] / 10} kg"
+        )
+
+        types = [t["type"]["name"].title() for t in pk_dict["types"]]
+
+        types_label.configure(
+            text = f"Types: {', '.join(types)}"
+        )
+
+        abilities = [
+            a["ability"]["name"].title()
+            for a in pk_dict["abilities"]
+        ]
+
+        abilities_label.configure(
+            text = f"Abilities: {', '.join(abilities)}"
+        )
+
+        description = get_pokemon_description(
+            pk_dict["name"]
+        )
+
+        description_label.configure(
+            text=description
+        )
+
+        sprite_url = pk_dict["sprites"]["other"]["official-artwork"]["front_default"]
+
+        response = requests.get(sprite_url)
+
+        pil_image = Image.open(BytesIO(response.content))
+
+        ctk_image = ctk.CTkImage(
+            light_image=pil_image,
+            dark_image=pil_image,
+            size = (300, 300)
+        )
+
+        sprite_label.configure(
+            image = ctk_image,
+            text = ""
+        )
+
+        sprite_label.image = ctk_image
+
         search_pokemon_frame.pack_forget()
         display_pk_info_frame.pack(fill="both", expand = True)
+
     else:
         error_searching_label.pack(pady=20)
-
 
 error_searching_label = ctk.CTkLabel(
     search_pokemon_frame,
@@ -306,55 +387,311 @@ display_pk_info_frame = ctk.CTkFrame(
     app,
     fg_color="red"
 )
+display_pk_info_title = ctk.CTkLabel(
+    display_pk_info_frame,
+    text="",
+    font=arial_font
+)
+display_pk_info_title.pack(pady=20)
 
-def create_new_user():
-    username = input("Please enter your username: ")
-    password = input("Please enter your password: ")
-    created_new_user = database.create_user(username, password)
+info_frame = ctk.CTkFrame(
+    display_pk_info_frame,
+    fg_color="red"
+    )
+info_frame.pack(side="left", padx=50, pady=20)
 
-    if created_new_user:
-        logged_in(created_new_user)
-    else:
+image_frame = ctk.CTkFrame(
+    display_pk_info_frame,
+    fg_color="red"
+    )
+
+image_frame.pack(side="left", padx=50, pady=20)
+
+button_frame = ctk.CTkFrame(
+    display_pk_info_frame,
+    fg_color="red"
+)
+button_frame.pack(side="bottom", pady=10)
+
+height_label = ctk.CTkLabel(
+    info_frame,
+    text=""
+)
+height_label.pack(pady=5)
+
+weight_label = ctk.CTkLabel(
+    info_frame,
+    text=""
+)
+weight_label.pack(pady=5)
+
+types_label = ctk.CTkLabel(
+    info_frame,
+    text=""
+)
+types_label.pack(pady=5)
+
+abilities_label = ctk.CTkLabel(
+    info_frame,
+    text="",
+    wraplength=400
+)
+abilities_label.pack(pady=5)
+
+sprite_label = ctk.CTkLabel(
+    image_frame,
+    text= ""
+)
+sprite_label.pack(padx=10)
+
+description_frame = ctk.CTkFrame(
+    display_pk_info_frame,
+    fg_color="red"
+)
+
+description_frame.pack(
+    side="left",
+    pady=20
+)
+
+description_frame_title = ctk.CTkLabel(
+    description_frame,
+    text = "Description:",
+    font = arial_font
+)
+description_frame_title.pack(pady=20)
+
+description_label = ctk.CTkLabel(
+    description_frame,
+    text = "",
+    wraplength=350,
+    justify = "left"
+)
+description_label.pack(pady=20)
+
+favourite_status_label = ctk.CTkLabel(
+    button_frame,
+    text=""
+)
+favourite_status_label.pack(pady=5)
+
+def add_to_fav():
+    global current_pokemon
+
+    if current_user_id == 0:
+        favourite_status_label.configure(
+            text="Must be logged in first."
+        )
         return
-    
-def logged_in(user_id=0):
-    while True:
-        try:
-            choice = int(input())
 
-            if not(1 <= choice <= 5):
-                print("Please enter a numer between 1 and 3")
-                continue
-        except ValueError:
-            print("Please enter a valid number.")
+    pk_name = current_pokemon["name"]
 
-        if choice == 1:
-            pk_name = input("Enter the name of a Pokémon: ").lower()
-            pk_dict = get_pokemon_data(pk_name)
+    success = database.add_fav_to_db(current_user_id, pk_name)
 
-            if pk_dict:
-                display_info(pk_dict)
+    if success:
+        favourite_status_label.configure(
+            text="Added to favourites!"
+        )
+    else:
+        favourite_status_label.configure(
+            text="Already in favourites."
+        )
 
-        elif choice == 2:
-            pk_ability = input("Enter the name of the ability: ").lower()
-            abi = get_ability_info(pk_ability)
+add_favourite_button = ctk.CTkButton(
+    button_frame,
+    text="Favourite!",
+    command=add_to_fav
+)
+add_favourite_button.pack(side="left", pady=5, padx=10)
 
-            if abi:
-                print(f"{abi}\n")
+# Search for ability frame
+def check_ab_exists():
+    global current_ability
+
+    ability = search_ab_bar_entry.get()
+    ab_dict = get_ability_info(ability)
+
+    if ab_dict:
+        current_ability = ab_dict
+        ability_frame_title.configure(
+            text=ability.title()
+        )
+        ability_information.configure(
+            text = ab_dict
+        )
+
+        search_ability_frame.forget()
+        ability_frame.pack(fill = "both", expand = True)
+
+search_ability_frame = ctk.CTkFrame(
+    app,
+    fg_color="red"
+)
+search_ability_title = ctk.CTkLabel(
+    search_ability_frame,
+    text = "Ability Search",
+    font = arial_font
+)
+search_ability_title.pack(pady=10)
+
+search_ab_bar_entry = ctk.CTkEntry(
+    search_ability_frame,
+    width = 250,
+    placeholder_text="Ability Name"
+)
+search_ab_bar_entry.pack(pady=20)
+
+search_ab_button = ctk.CTkButton(
+    search_ability_frame,
+    text = "Search!",
+    command = check_ab_exists
+)
+search_ab_button.pack(pady=20)
+
+# Display pokemon ability frame
+ability_frame = ctk.CTkFrame(
+    app,
+    fg_color="red"
+)
+ability_frame_title = ctk.CTkLabel(
+    ability_frame,
+    text=""
+)
+ability_frame_title.pack(pady=10)
+
+ability_information = ctk.CTkLabel(
+    ability_frame,
+    text = "",
+    wraplength=700
+)
+ability_information.pack(pady=10)
+
+# Look at favourites frame
+def open_favourite_pokemon(pokemon_name):
+    search_bar_entry.delete(0, "end")
+    search_bar_entry.insert(0, pokemon_name)
+
+    favourites_frame.pack_forget()
+    check_pk_exists()
+
+def load_favourites():
+    if current_user_id in (None, 0):
+        return
+
+    for widget in scrollable_favourites.winfo_children():
+        widget.destroy()
+
+    favourites = database.get_user_favourites(
+        current_user_id
+    )
+    for favourite in favourites:
+
+        pokemon_name = favourite[0]
+
+        pokemon_button = ctk.CTkButton(
+            scrollable_favourites,
+            text=pokemon_name.title(),
+            command=lambda name=pokemon_name:
+                open_favourite_pokemon(name)
+        )
+        pokemon_button.pack(
+            fill="x",
+            padx=10,
+            pady=5
+        )
+
+def show_favourites():
+    logged_in_status_label.configure(
+        text = ""
+    )
         
-        elif choice == 3:
-            add_to_fav(user_id)
+    if current_user_id in (None, 0):
 
-        elif choice == 4:
-            pass
+        logged_in_status_label.configure(
+            text="You must be logged in."
+        )
 
-        elif choice == 5:
-            break
+        return
 
-        else:
-            print("Please enter a valid option")
-            continue
-    return
+    load_favourites()
+    logged_in_frame.pack_forget()
+
+    favourites_frame.pack(
+        fill="both",
+        expand=True
+    )
+
+look_favourite_button.configure(
+    command = show_favourites
+)
+favourites_frame = ctk.CTkFrame(
+    app,
+    fg_color="red"
+)
+favourites_title = ctk.CTkLabel(
+    favourites_frame,
+    text="Favourite Pokemon",
+    font=arial_font
+)
+
+favourites_title.pack(pady=10)
+
+scrollable_favourites = ctk.CTkScrollableFrame(
+    favourites_frame, width=400, height=400
+)
+
+scrollable_favourites.pack(
+    fill="both", expand=True, padx=20, pady=20
+)
+
+logged_in_status_label = ctk.CTkLabel(
+    logged_in_frame,
+    text=""
+)
+logged_in_status_label.pack(pady=5)
+
+# Defining all back buttons
+login_back_button = create_back_button(
+    log_in_frame,
+    log_in_frame,
+    main_menu_frame
+)
+login_back_button.pack(pady=10)
+
+register_back_button = create_back_button(
+    register_user_frame,
+    register_user_frame,
+    main_menu_frame
+)
+register_back_button.pack(pady=10)
+
+search_pk_back_button = create_back_button(
+    search_pokemon_frame,
+    search_pokemon_frame,
+    logged_in_frame
+)
+search_pk_back_button.pack(pady=10)
+
+pk_info_back = create_back_button(
+    button_frame,
+    display_pk_info_frame,
+    search_pokemon_frame
+)
+pk_info_back.pack(side="right", pady=10)
+
+search_ab_back_button = create_back_button(
+    search_ability_frame,
+    search_ability_frame,
+    logged_in_frame
+)
+search_ab_back_button.pack(pady=10)
+
+ability_back_button = create_back_button(
+    ability_frame,
+    ability_frame,
+    search_ability_frame
+)
+ability_back_button.pack(pady=10)
 
 # Retrieves data by requesting the entered pokemon name and displays a reasonable message if retrieval failed
 # else returns the information as a dictionary
@@ -369,6 +706,21 @@ def get_pokemon_data(pokemon_name):
     else:
         print(f"Failed to retrieve data {response.status_code}")
 
+# Retrieves pokemon species description
+def get_pokemon_description(pokemon_name):
+    url = f"{base_url}/pokemon-species/{pokemon_name}"
+
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        species_data = response.json()
+
+        for entry in species_data["flavor_text_entries"]:
+            if entry["language"]["name"] == "en":
+                return entry["flavor_text"].replace("\n", " ").replace("\f", " ")
+
+    return "No description available."
+
 # Retrieves ability information from user input, only returns the ability in english
 def get_ability_info(ability_name):
     url = f"{base_url}/ability/{ability_name}"
@@ -380,36 +732,5 @@ def get_ability_info(ability_name):
                 return a["effect"]
     else: 
         print(f"Failed to retrieve ability. {response.status_code}")
-
-# Uses get_pokemon_data() and uses the dictionary returned to filter and display relevant information.
-def display_info(data):
-    print(f"Name: {data['name']}\n")
-    print(f"Id: {data['id']}\n")
-    print(f"Height: {data['height']/10}m\n")
-    print(f"Weight: {data['weight']/10}kg\n")
-    for a in data["abilities"]:
-        effect = get_ability_info(a['ability']['name'])
-        if effect:
-            effect = effect.replace("\n", " ")
-        print(f"Ability name: {a['ability']['name']} - {effect}\nHidden: {a['is_hidden']}")
-        print("")
-
-def add_to_fav(user_id):
-    if user_id == 0:
-        print("You must be logged in to see this feature.\n")
-        return
-    
-    while True:
-        pk = input("Please enter the name of the pokemon to add to your favourites: ")
-
-        url = f"{base_url}/pokemon/{pk}"
-        response = requests.get(url)
-        
-        if response.status_code == 200:
-            database.add_fav_to_db(user_id, pk)
-            return
-        else:
-            print("Pokemon not found.")
-            continue
 
 app.mainloop()
