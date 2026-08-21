@@ -40,6 +40,7 @@ def register_pressed():
 def guest_pressed():
     global current_user_id
     current_user_id = 0
+    logged_in_status_label.configure(text="")
     main_menu_frame.pack_forget()
     logged_in_frame.pack(fill="both", expand = True)
 
@@ -107,14 +108,16 @@ def verify_user():
         current_user_id = user_id
         log_in_frame.pack_forget()
         logged_in_frame.pack(fill="both", expand = True)
+        username_entry.delete(0, "end")
+        password_entry.delete(0, "end")
+        incorrect_details_label.configure(
+            text = ""
+        )
+        logged_in_status_label.configure(text="")
     else:
-        incorrect_details_label.pack(pady=30)
-
-incorrect_details_label = ctk.CTkLabel(
-    log_in_frame,
-    text = "Incorrect username or password",
-    font = arial_font
-)
+        incorrect_details_label.configure(
+            text = "Incorrect username or password"
+        )
 
 username_entry = ctk.CTkEntry(
     log_in_frame,
@@ -137,6 +140,13 @@ check_login_button = ctk.CTkButton(
     command = verify_user
 )
 check_login_button.pack(pady=10)
+
+incorrect_details_label = ctk.CTkLabel(
+    log_in_frame,
+    text = "",
+    font = arial_font
+)
+incorrect_details_label.pack(pady=20)
 
 #Register Frame
 register_user_frame = ctk.CTkFrame(
@@ -162,8 +172,16 @@ def register_user():
         current_user_id = created_new_user
         register_user_frame.pack_forget()
         logged_in_frame.pack(fill="both", expand = True)
+        register_username_entry.delete(0, "end")
+        register_password_entry.delete(0, "end")
+        username_already_exists.configure(
+            text = ""
+        )
+        logged_in_status_label.configure(text="")
     else:
-        username_already_exists.pack(pady=20)
+        username_already_exists.configure(
+            text = "Sorry, username provided already exists."
+        )
 
 register_username_entry = ctk.CTkEntry(
     register_user_frame,
@@ -189,9 +207,10 @@ register_button.pack(pady=20)
 
 username_already_exists = ctk.CTkLabel(
     register_user_frame,
-    text = "Sorry, username provided already exists.",
+    text = "",
     font = arial_font
 )
+username_already_exists.pack(pady=20)
 
 # Logged/Guest in Frame
 logged_in_frame = ctk.CTkFrame(
@@ -275,6 +294,9 @@ def check_pk_exists():
 
     pokemon_name = search_bar_entry.get()
     pk_dict = get_pokemon_data(pokemon_name)
+    favourite_status_label.configure(
+        text = ""
+    )
 
     if pk_dict:
         search_bar_entry.delete(0, "end")
@@ -335,19 +357,11 @@ def check_pk_exists():
 
         sprite_label.image = ctk_image
 
-        add_favourite_button = ctk.CTkButton(
-            button_frame,
-            text="Favourite!",
-            command=add_to_fav
-        )
-        add_favourite_button.pack(side="left", pady=5, padx=10)
-
         search_pokemon_frame.pack_forget()
         display_pk_info_frame.pack(fill="both", expand = True)
 
     else:
         error_searching_label.pack(pady=20)
-
 
 error_searching_label = ctk.CTkLabel(
     search_pokemon_frame,
@@ -461,6 +475,35 @@ favourite_status_label = ctk.CTkLabel(
 )
 favourite_status_label.pack(pady=5)
 
+def add_to_fav():
+    global current_pokemon
+
+    if current_user_id == 0:
+        favourite_status_label.configure(
+            text="Must be logged in first."
+        )
+        return
+
+    pk_name = current_pokemon["name"]
+
+    success = database.add_fav_to_db(current_user_id, pk_name)
+
+    if success:
+        favourite_status_label.configure(
+            text="Added to favourites!"
+        )
+    else:
+        favourite_status_label.configure(
+            text="Already in favourites."
+        )
+
+add_favourite_button = ctk.CTkButton(
+    button_frame,
+    text="Favourite!",
+    command=add_to_fav
+)
+add_favourite_button.pack(side="left", pady=5, padx=10)
+
 # Search for ability frame
 def check_ab_exists():
     global current_ability
@@ -558,9 +601,13 @@ def load_favourites():
         )
 
 def show_favourites():
+    logged_in_status_label.configure(
+        text = ""
+    )
+        
     if current_user_id in (None, 0):
 
-        favourite_status_label.configure(
+        logged_in_status_label.configure(
             text="You must be logged in."
         )
 
@@ -596,6 +643,12 @@ scrollable_favourites = ctk.CTkScrollableFrame(
 scrollable_favourites.pack(
     fill="both", expand=True, padx=20, pady=20
 )
+
+logged_in_status_label = ctk.CTkLabel(
+    logged_in_frame,
+    text=""
+)
+logged_in_status_label.pack(pady=5)
 
 # Defining all back buttons
 login_back_button = create_back_button(
@@ -679,27 +732,5 @@ def get_ability_info(ability_name):
                 return a["effect"]
     else: 
         print(f"Failed to retrieve ability. {response.status_code}")
-
-def add_to_fav():
-    global current_pokemon
-
-    if current_user_id == 0:
-        favourite_status_label.configure(
-            text="Must be logged in first."
-        )
-        return
-
-    pk_name = current_pokemon["name"]
-
-    success = database.add_fav_to_db(current_user_id, pk_name)
-
-    if success:
-        favourite_status_label.configure(
-            text="Added to favourites!"
-        )
-    else:
-        favourite_status_label.configure(
-            text="Already in favourites."
-        )
 
 app.mainloop()
