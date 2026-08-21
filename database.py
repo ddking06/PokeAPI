@@ -1,4 +1,5 @@
 import sqlite3
+import bcrypt
 
 def create_tables():
     conn = sqlite3.connect("pokedex.db")
@@ -31,18 +32,32 @@ def verify_user(username, password):
     conn = get_connection()
     cursor = conn.cursor()
 
-    check_query = "SELECT id FROM users WHERE username = ? and password = ?"
-    cursor.execute(check_query, (username, password))
+    query = """
+    SELECT id, password
+    FROM users
+    WHERE username = ?
+    """
+
+    cursor.execute(query, (username,))
 
     result = cursor.fetchone()
 
     cursor.close()
     conn.close()
 
-    if result is not None:
-        return result[0]
-    else:
+    if result is None:
         return None
+
+    user_id = result[0]
+    stored_hash = result[1]
+
+    if bcrypt.checkpw(
+        password.encode(),
+        stored_hash.encode()
+    ):
+        return user_id
+
+    return None
 
 def create_user(new_user_name, password):
     conn = get_connection()
@@ -61,8 +76,17 @@ def create_user(new_user_name, password):
         conn.close()
         return None # Informs the other function it failed.
 
+    hashed_password = bcrypt.hashpw(
+        password.encode(),
+        bcrypt.gensalt()
+    ).decode()
+
     insert_query = "INSERT INTO users(username, password) VALUES (?, ?)"
-    cursor.execute(insert_query, (new_user_name, password))
+    cursor.execute(
+        insert_query,
+        (new_user_name, hashed_password)
+    )
+
     user_id = cursor.lastrowid
     
     conn.commit()

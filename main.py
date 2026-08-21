@@ -297,6 +297,9 @@ def check_pk_exists():
     favourite_status_label.configure(
         text = ""
     )
+    error_searching_label.configure(
+        text = ""
+    )
 
     if pk_dict:
         search_bar_entry.delete(0, "end")
@@ -331,7 +334,7 @@ def check_pk_exists():
         )
 
         description = get_pokemon_description(
-            pk_dict["name"]
+            pk_dict
         )
 
         description_label.configure(
@@ -361,13 +364,18 @@ def check_pk_exists():
         display_pk_info_frame.pack(fill="both", expand = True)
 
     else:
-        error_searching_label.pack(pady=20)
+        error_searching_label.configure(
+            text = "Please check your spelling."
+        )
+        pass
 
 error_searching_label = ctk.CTkLabel(
     search_pokemon_frame,
-    text = "Sorry, details entered don't match anything on the system. Please check your spelling.",
+    text = "",
     font = arial_font
 )
+error_searching_label.pack(pady=5)
+
 search_bar_entry = ctk.CTkEntry(
     search_pokemon_frame,
     width = 250,
@@ -398,7 +406,7 @@ info_frame = ctk.CTkFrame(
     display_pk_info_frame,
     fg_color="red"
     )
-info_frame.pack(side="left", padx=50, pady=20)
+info_frame.pack(side="left", pady=10)
 
 image_frame = ctk.CTkFrame(
     display_pk_info_frame,
@@ -484,6 +492,8 @@ def add_to_fav():
         )
         return
 
+    print(current_pokemon)
+    print(current_pokemon.keys())
     pk_name = current_pokemon["name"]
 
     success = database.add_fav_to_db(current_user_id, pk_name)
@@ -707,17 +717,21 @@ def get_pokemon_data(pokemon_name):
         print(f"Failed to retrieve data {response.status_code}")
 
 # Retrieves pokemon species description
-def get_pokemon_description(pokemon_name):
-    url = f"{base_url}/pokemon-species/{pokemon_name}"
+def get_pokemon_description(pk_dict):
+    species_url = pk_dict["species"]["url"]
 
-    response = requests.get(url)
+    response = requests.get(species_url)
 
     if response.status_code == 200:
         species_data = response.json()
 
         for entry in species_data["flavor_text_entries"]:
             if entry["language"]["name"] == "en":
-                return entry["flavor_text"].replace("\n", " ").replace("\f", " ")
+                return (
+                    entry["flavor_text"]
+                    .replace("\n", " ")
+                    .replace("\f", " ")
+                )
 
     return "No description available."
 
