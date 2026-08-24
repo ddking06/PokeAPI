@@ -71,10 +71,12 @@ PokeAPI/
 
 ### Pokémon Information
 <img width="753" height="547" alt="image" src="https://github.com/user-attachments/assets/b156257d-d169-4d22-9bfc-55297bb8ccf7" />
+
 Displays detailed Pokémon information retrieved from the PokéAPI, including official artwork, description, types, abilities, height, and weight. Logged-in users can add Pokémon to their favourites.
 
 ### Favourites Page
 <img width="753" height="547" alt="image" src="https://github.com/user-attachments/assets/c9092db3-b7df-49d3-9935-05a1f3b0add4" />
+
 Shows all Pokémon saved by the current user. Each Pokémon is displayed as a clickable button that loads its full information page.
 
 ## Acknowledgements
